@@ -227,10 +227,11 @@ save_reports() {
   # Determinar ruta de descargas según el sistema operativo
   local download_dir
   if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-    download_dir="$HOME/Descargas"
-    [[ -d "$download_dir" ]] || download_dir="$HOME/Downloads"
+    # Ruta por defecto para Linux
+    download_dir="$HOME/Downloads"
   elif [[ "$OSTYPE" == "msys" || "$OSTYPE" == "cygwin" || "$OSTYPE" == "win32" ]]; then
-    download_dir="$(powershell.exe -NoProfile -Command '[Environment]::GetFolderPath("Downloads")' | tr -d '\r')"
+    # Ruta específica para Windows
+    download_dir="C:/Users/HP/Downloads"
   else
     echo "Sistema operativo no reconocido. Usando el directorio actual."
     download_dir="."
@@ -260,7 +261,6 @@ save_reports() {
   # Verificación final
   echo "Informes descargados en: $download_dir"
 }
-
 
 main "$@"
 save_reports
