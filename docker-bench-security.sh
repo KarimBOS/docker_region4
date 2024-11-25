@@ -221,7 +221,6 @@ main () {
 # Guardar informes automáticamente al terminar
 save_reports() {
   local timestamp=$(date +"%Y%m%d_%H%M%S")
-  local json_report="report_${timestamp}.json"
   local txt_report="report_${timestamp}.txt"
 
   # Determinar ruta de descargas según el sistema operativo
@@ -240,15 +239,6 @@ save_reports() {
   # Crear directorio de descargas si no existe
   mkdir -p "$download_dir"
 
-  # Guardar el informe JSON
-  if [ -f "output.json" ]; then
-    cp "output.json" "$json_report"
-    mv "$json_report" "$download_dir/"
-    echo "Informe JSON guardado como $download_dir/$json_report"
-  else
-    echo "Error: No se generó el archivo output.json. Revisa la ejecución del programa."
-  fi
-
   # Guardar el informe TXT
   if [ -f "$logger" ]; then
     cp "$logger" "$txt_report"
@@ -261,6 +251,5 @@ save_reports() {
   # Verificación final
   echo "Informes descargados en: $download_dir"
 }
-
 main "$@"
 save_reports
