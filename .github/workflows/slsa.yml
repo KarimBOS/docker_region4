@@ -1,0 +1,107 @@
+---
+  name: SLSA
+  # Triggered on push or release events
+  # Se activa en eventos de push o release
+  on:
+    push:
+    release:
+      permissions:
+        contents: write
+      types: [published, released] # Specific types of release events
+                                   # Tipos específicos de eventos de release
+  
+  permissions:
+    contents: read # Read-only access to repository contents
+                   # Acceso de solo lectura al contenido del repositorio
+  
+  jobs:
+    build:
+      outputs:
+        hashes: ${{ steps.hash.outputs.hashes }} # Output variable for generated hashes
+                                                # Variable de salida para los hashes generados
+      runs-on: ubuntu-latest # Workflow runs on the latest Ubuntu environment
+                             # El flujo de trabajo se ejecuta en el entorno más reciente de Ubuntu
+      steps:
+        - name: Harden Runner
+          uses: step-security/harden-runner@63c24ba6bd7ba022e95695ff85de572c04a18142
+          # Adds security policies to the runner environment
+          # Añade políticas de seguridad al entorno del runner
+          with:
+            egress-policy: audit # Logs external network requests
+                                 # Registra solicitudes de red externas
+  
+        - run: echo "REPOSITORY_NAME=$(echo '${{ github.repository }}' | awk -F '/' '{print $2}')" >> $GITHUB_ENV
+          # Extracts the repository name and sets it as an environment variable
+          # Extrae el nombre del repositorio y lo define como variable de entorno
+          shell: bash
+  
+        - name: Checkout repository
+          uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+          # Pulls the repository's code for the workflow
+          # Descarga el código del repositorio para el flujo de trabajo
+  
+        - name: Build artifacts
+          run: |
+            find *.sh functions/* tests/* Dockerfile Vagrantfile -exec sha256sum {} \; > ${{ env.REPOSITORY_NAME }}.sha256
+          # Generates SHA256 checksums for specific files and saves them to a file
+          # Genera sumas de verificación SHA256 para archivos específicos y los guarda en un archivo
+  
+        - name: Generate hashes
+          shell: bash
+          id: hash
+          run: |
+            echo "hashes=$(sha256sum ${{ env.REPOSITORY_NAME }}.sha256 | base64 -w0)" >> "$GITHUB_OUTPUT"
+          # Encodes the checksum file hash in Base64 for use in later steps
+          # Codifica el hash del archivo de suma de verificación en Base64 para pasos posteriores
+  
+        - name: Upload ${{ env.REPOSITORY_NAME }}.sha256
+          uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3
+          # Uploads the checksum file as an artifact
+          # Carga el archivo de suma de verificación como un artefacto
+          with:
+            name: ${{ env.REPOSITORY_NAME }}.sha256
+            path: ${{ env.REPOSITORY_NAME }}.sha256
+            if-no-files-found: error # Ensures the process fails if no file is found
+                                     # Asegura que el proceso falle si no se encuentra el archivo
+            retention-days: 5 # Retains the artifact for 5 days
+                              # Retiene el artefacto por 5 días
+  
+    provenance:
+      needs: [build]
+      permissions:
+        actions: read
+        id-token: write
+        contents: write
+      uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.10.0
+      # Generates provenance metadata for supply chain security
+      # Genera metadatos de procedencia para la seguridad de la cadena de suministro
+      with:
+        base64-subjects: "${{ needs.build.outputs.hashes }}"
+        upload-assets: ${{ startsWith(github.ref, 'refs/tags/') }}
+  
+    release:
+      permissions:
+        actions: read
+        id-token: write
+        contents: write
+      needs: [build, provenance]
+      runs-on: ubuntu-latest
+      if: startsWith(github.ref, 'refs/tags/') # Ensures this job runs only for tagged releases
+                                               # Asegura que este trabajo se ejecute solo para releases etiquetados
+      steps:
+        - run: echo "REPOSITORY_NAME=$(echo '${{ github.repository }}' | awk -F '/' '{print $2}')" >> $GITHUB_ENV
+          shell: bash
+  
+        - name: Download ${{ env.REPOSITORY_NAME }}.sha256
+          uses: actions/download-artifact@c850b930e6ba138125429b7e5c93fc707a7f8427
+          # Downloads the previously uploaded checksum artifact
+          # Descarga el artefacto de suma de verificación previamente cargado
+  
+        - name: Upload asset
+          uses: softprops/action-gh-release@9d7c94cfd0a1f3ed45544c887983e9fa900f0564
+          # Uploads the checksum file as a release asset
+          # Carga el archivo de suma de verificación como un recurso de release
+          with:
+            files: |
+              ${{ env.REPOSITORY_NAME }}.sha256
+  

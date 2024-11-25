@@ -1,0 +1,21 @@
+services:
+  docker-bench-security:
+      # use image if you have a dedicated build step:                # usa la imagen si tienes un paso de construcción dedicado:
+      #   docker build --rm -t docker-bench-security .
+      # image: docker-bench-security
+
+      # use build path to Dockerfile if docker-compose should build the image  # usa la ruta de construcción al Dockerfile si docker-compose debe construir la imagen
+      build: .
+
+      cap_add:
+          - audit_control
+      labels:
+          - docker_bench_security
+      pid: host
+      stdin_open: true
+      tty: true
+      volumes:
+          - /var/lib:/var/lib:ro                                   # monta '/var/lib' como de solo lectura
+          - /var/run/docker.sock:/var/run/docker.sock:ro           # monta el socket de Docker como de solo lectura
+          - /usr/lib/systemd:/usr/lib/systemd:ro                   # monta '/usr/lib/systemd' como de solo lectura
+          - /etc:/etc:ro                                           # monta '/etc' como de solo lectura

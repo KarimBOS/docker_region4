@@ -1,0 +1,33 @@
+# Name of the GitHub Action workflow
+# Nombre del flujo de trabajo de GitHub Actions
+name: Issue assignment
+
+# Trigger the workflow when issues are opened
+# Activa el flujo de trabajo cuando se abren problemas
+on:
+  issues:
+    types: [opened]
+
+# Set permissions for the workflow
+# Establece permisos para el flujo de trabajo
+permissions:
+  contents: read # Only read access to repository contents
+                 # Solo acceso de lectura al contenido del repositorio
+
+jobs:
+  auto-assign: # Define a job named "auto-assign"
+               # Define un trabajo llamado "auto-assign"
+    permissions:
+      issues: write # Grant write permission for issues to assign them
+                    # Otorga permiso de escritura para asignar problemas
+    runs-on: ubuntu-latest # Specify the environment to run the workflow
+                           # Especifica el entorno donde se ejecutará el flujo de trabajo
+    steps:
+      - name: 'auto-assign issue' # Step to assign an issue automatically
+                                  # Paso para asignar automáticamente un problema
+        uses: pozil/auto-assign-issue@74b9f64cc1a08f99358061073e243a4c3d7dd5c4 
+        # Specify the action to use with its version via commit hash
+        # Especifica la acción a utilizar junto con su versión mediante un hash de commit
+        with:
+          assignees: konstruktoid # Assign the issue to a specific user
+                                  # Asigna el problema a un usuario específico

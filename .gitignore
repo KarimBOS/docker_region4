@@ -1,0 +1,3 @@
+log/*                       # Ignore all files inside the 'log' directory (ignorar todos los archivos dentro del directorio 'log')
+*.swp*                      # Ignore all files with the extension '.swp' (ignorar todos los archivos con la extensión '.swp')
+.vagrant/                   # Ignore the '.vagrant' directory (ignorar el directorio '.vagrant')

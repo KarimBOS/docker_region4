@@ -1,0 +1,6 @@
+*                           # Ignore all files and directories (ignorar todos los archivos y directorios)
+!docker-bench-security.sh   # Do not ignore the docker-bench-security.sh file (no ignorar el archivo docker-bench-security.sh)
+!functions/                 # Do not ignore the 'functions' directory (no ignorar el directorio 'functions')
+!tests/                     # Do not ignore the 'tests' directory (no ignorar el directorio 'tests')
+!log/                       # Do not ignore the 'log' directory (no ignorar el directorio 'log')
+log/*                       # Ignore all files inside the 'log' directory (ignorar todos los archivos dentro del directorio 'log')
